@@ -6,6 +6,8 @@ import (
 	"jwt_auth_gRPC/sso/internal/lib/logger/handlers/slogpretty"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 const (
@@ -26,9 +28,19 @@ func main() {
 
 	applicaiton := app.New(log, cfg.GRPS.Port, cfg.StoragePath, cfg.Token_ttl)
 
-	applicaiton.GRPCServer.MustRun()
+	go applicaiton.GRPCServer.MustRun()
 
 	// TODO: run gRPC server
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	sign := <-stop
+
+	log.Info("stopping app", slog.String("signal", sign.String()))
+	applicaiton.GRPCServer.Stop()
+
+	log.Info("app stopped")
 }
 
 func setupLogger(env string) *slog.Logger {
