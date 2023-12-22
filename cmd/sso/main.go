@@ -17,7 +17,10 @@ func main() {
 	cfg := config.MustLoad()
 
 	log := setupLogger(cfg.Env)
-	log.Info("starting url-shortener", slog.String("env", cfg.Env))
+	log.Info("starting app",
+		slog.String("env", cfg.Env),
+		slog.String("port", cfg.GRPS.Port),
+	)
 	log.Debug("debug messages are enabled")
 
 	// TODO: init app
