@@ -20,6 +20,7 @@ type GRPS_conf struct {
 }
 
 func MustLoad() Config {
+	// TODO: переделать
 	configPath := "D:/go_path/src/jwt_auth_gRPC/sso/config/local.yaml"
 	err := os.Setenv("CONFIG_PATH", configPath)
 	if err != nil {
