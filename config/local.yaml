@@ -1,0 +1,6 @@
+env: "local" # local, dev, prod
+storage_path: "D:/go_path/src/src/jwt_auth_gRPC/sso/storage/storage.db"
+token_ttl: 1h
+grpc:
+  port: 8082
+  timeout: 20s
