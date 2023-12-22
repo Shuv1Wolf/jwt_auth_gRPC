@@ -1,6 +1,7 @@
 package main
 
 import (
+	"jwt_auth_gRPC/sso/internal/app"
 	"jwt_auth_gRPC/sso/internal/config"
 	"jwt_auth_gRPC/sso/internal/lib/logger/handlers/slogpretty"
 	"log/slog"
@@ -19,11 +20,13 @@ func main() {
 	log := setupLogger(cfg.Env)
 	log.Info("starting app",
 		slog.String("env", cfg.Env),
-		slog.String("port", cfg.GRPS.Port),
+		slog.Int("port", cfg.GRPS.Port),
 	)
 	log.Debug("debug messages are enabled")
 
-	// TODO: init app
+	applicaiton := app.New(log, cfg.GRPS.Port, cfg.StoragePath, cfg.Token_ttl)
+
+	applicaiton.GRPCServer.MustRun()
 
 	// TODO: run gRPC server
 }

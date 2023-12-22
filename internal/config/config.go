@@ -3,19 +3,20 @@ package config
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
-	Env         string    `yaml:"env" env-default:"prod"`
-	StoragePath string    `yaml:"storage_path" env-reauired:"true"`
-	Token_ttl   string    `yaml:"token_ttl" env-default:"1h"`
-	GRPS        GRPS_conf `yaml:"grpc"`
+	Env         string        `yaml:"env" env-default:"prod"`
+	StoragePath string        `yaml:"storage_path" env-reauired:"true"`
+	Token_ttl   time.Duration `yaml:"token_ttl" env-default:"1h"`
+	GRPS        GRPS_conf     `yaml:"grpc"`
 }
 
 type GRPS_conf struct {
-	Port    string `yaml:"port" env-drfault:"8000"`
+	Port    int    `yaml:"port" env-drfault:"8000"`
 	TimeOut string `yaml:"timeout" env-default:"4s"`
 }
 
