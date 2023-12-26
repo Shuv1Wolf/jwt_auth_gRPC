@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"net/mail"
+	"regexp"
 
 	ssov1 "github.com/Shuv1Wolf/jwt_protos/gen/go/sso"
 	"google.golang.org/grpc"
@@ -26,11 +28,10 @@ type Auth interface {
 
 type serverAPI struct {
 	ssov1.UnimplementedAuthServer
-	auth Auth
 }
 
-func Register(gRPC *grpc.Server, auth Auth) {
-	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
+func Register(gRPC *grpc.Server) {
+	ssov1.RegisterAuthServer(gRPC, &serverAPI{})
 }
 
 const (
@@ -38,27 +39,94 @@ const (
 )
 
 func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.LoginResponse, error) {
-	// TODO: сделать полноценную валидацию в отдельной функции
-	if req.GetEmail() == "" || req.GetPassword() == "" {
-		return nil, status.Error(codes.InvalidArgument, "email is required")
-	}
-	if req.GetPassword() == "" {
-		return nil, status.Error(codes.InvalidArgument, "password is required")
-	}
-
-	if req.GetAppId() == emptyValue {
-		return nil, status.Error(codes.InvalidArgument, "app_id is required")
-	}
-
-	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword(), int(req.GetAppId()))
+	err := validateLogin(req)
 	if err != nil {
-		// TODO: обработка ошибок в зависимости какая ошибка
-		return nil, status.Error(codes.Internal, "internal error")
+		return nil, err
 	}
-
 	return &ssov1.LoginResponse{
-		AccessToken: token,
+		AccessToken: "token",
 	}, nil
 }
 
-// TODO: сделать реализацию всего остального
+func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (*ssov1.RegisterResponse, error) {
+	err := validateRegister(req)
+	if err != nil {
+		return nil, err
+	}
+	return &ssov1.RegisterResponse{
+		UserId: 3,
+	}, nil
+}
+
+func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ssov1.IsAdminResponse, error) {
+	err := validateIsAdmin(req)
+	if err != nil {
+		return nil, err
+	}
+	return &ssov1.IsAdminResponse{
+		IsAdmin: true,
+	}, nil
+}
+
+// validation
+func validateLogin(req *ssov1.LoginRequest) error {
+	if req.GetEmail() == "" {
+		return status.Error(codes.InvalidArgument, "email is required")
+	}
+	_, err := mail.ParseAddress(req.GetEmail())
+	if err != nil {
+		return status.Error(codes.InvalidArgument, "incorrect email address")
+	}
+
+	if req.GetPassword() == "" {
+		return status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	if req.GetAppId() == emptyValue {
+		return status.Error(codes.InvalidArgument, "app_id is required")
+	}
+	return nil
+}
+
+func validateRegister(req *ssov1.RegisterRequest) error {
+	if req.GetEmail() == "" {
+		return status.Error(codes.InvalidArgument, "email is required")
+	}
+
+	_, err := mail.ParseAddress(req.GetEmail())
+	if err != nil {
+		return status.Error(codes.InvalidArgument, "incorrect email address")
+	}
+
+	if req.GetPassword() == "" {
+		return status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	if len(req.GetPassword()) < 8 {
+		return status.Error(codes.InvalidArgument, "password must be at least 8 characters long")
+	}
+
+	match, _ := regexp.MatchString(`[A-Z]`, req.GetPassword())
+	if !match {
+		return status.Error(codes.InvalidArgument, "password must contain at least one uppercase letter")
+	}
+
+	match, _ = regexp.MatchString(`[a-z]`, req.GetPassword())
+	if !match {
+		return status.Error(codes.InvalidArgument, "password must contain at least one lowercase letter")
+	}
+
+	match, _ = regexp.MatchString(`[0-9]`, req.GetPassword())
+	if !match {
+		return status.Error(codes.InvalidArgument, "password must contain at least one number")
+	}
+
+	return nil
+}
+
+func validateIsAdmin(req *ssov1.IsAdminRequest) error {
+	if req.GetUserId() == emptyValue {
+		return status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	return nil
+}
