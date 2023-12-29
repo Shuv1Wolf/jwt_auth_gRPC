@@ -1,6 +1,4 @@
-
-version: "3"
-
+version: '3.0.0'
 tasks:
   run:
     aliases:
@@ -8,3 +6,10 @@ tasks:
     desc: "run server"
     cmds:
       - go run cmd/sso/main.go
+
+  migrate:
+    aliases:
+      - migrate
+    desc: "run migrator"
+    cmds:
+      - go run cmd/migrator/main.go --storage-path=./storage/sso.db --migrations-path=./migrations
