@@ -27,6 +27,9 @@ type Auth interface {
 	IsAdmin(ctx context.Context,
 		userID int64,
 	) (bool, error)
+	Ping(ctx context.Context,
+		appID int64,
+	) (bool, error)
 }
 
 type serverAPI struct {
@@ -99,6 +102,21 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ss
 
 	return &ssov1.IsAdminResponse{
 		IsAdmin: isAdmin,
+	}, nil
+}
+
+func (s *serverAPI) Ping(ctx context.Context, req *ssov1.IsPingRequest) (*ssov1.IsPingResponse, error) {
+	ping, err := s.auth.Ping(ctx, req.GetAppId())
+	if err != nil {
+		if errors.Is(err, storage.ErrAppNotFound) {
+			return &ssov1.IsPingResponse{
+				Client: ping,
+			}, nil
+		}
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+	return &ssov1.IsPingResponse{
+		Client: ping,
 	}, nil
 }
 
