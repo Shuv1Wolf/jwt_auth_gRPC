@@ -27,6 +27,9 @@ type Auth interface {
 	IsAdmin(ctx context.Context,
 		userID int64,
 	) (bool, error)
+}
+
+type Ping interface {
 	Ping(ctx context.Context,
 		appID int64,
 	) (bool, error)
@@ -35,10 +38,11 @@ type Auth interface {
 type serverAPI struct {
 	ssov1.UnimplementedAuthServer
 	auth Auth
+	ping Ping
 }
 
-func Register(gRPC *grpc.Server, auth Auth) {
-	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
+func Register(gRPC *grpc.Server, auth Auth, ping Ping) {
+	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth, ping: ping})
 }
 
 const (
@@ -106,7 +110,7 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ss
 }
 
 func (s *serverAPI) Ping(ctx context.Context, req *ssov1.IsPingRequest) (*ssov1.IsPingResponse, error) {
-	ping, err := s.auth.Ping(ctx, req.GetAppId())
+	ping, err := s.ping.Ping(ctx, req.GetAppId())
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
 			return &ssov1.IsPingResponse{
