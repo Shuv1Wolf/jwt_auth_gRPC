@@ -19,8 +19,8 @@ func New(log *slog.Logger, grpcPort int, storagePath string, tokenTTL time.Durat
 		panic(err)
 	}
 
-	authService := auth.New(log, storage, storage, storage, tokenTTL)
 	pingService := ping.New(log, storage)
+	authService := auth.New(log, storage, storage, storage, tokenTTL)
 
 	grpcApp := grpcapp.New(log, authService, pingService, grpcPort)
 
