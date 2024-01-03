@@ -3,6 +3,7 @@ package grpcapp
 import (
 	"fmt"
 	authgrpc "jwt_auth_gRPC/sso/internal/grpc/auth"
+	pinggrpc "jwt_auth_gRPC/sso/internal/grpc/ping"
 	"log/slog"
 	"net"
 
@@ -15,10 +16,11 @@ type App struct {
 	port       int
 }
 
-func New(log *slog.Logger, authService authgrpc.Auth, pingService authgrpc.Ping, port int) *App {
+func New(log *slog.Logger, authService authgrpc.Auth, pingService pinggrpc.Ping, port int) *App {
 	gRPCServer := grpc.NewServer()
 
-	authgrpc.Register(gRPCServer, authService, pingService)
+	pinggrpc.Register(gRPCServer, pingService)
+	authgrpc.Register(gRPCServer, authService)
 
 	return &App{
 		log:        log,

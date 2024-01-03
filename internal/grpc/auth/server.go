@@ -29,20 +29,13 @@ type Auth interface {
 	) (bool, error)
 }
 
-type Ping interface {
-	Ping(ctx context.Context,
-		appID int64,
-	) (bool, error)
-}
-
 type serverAPI struct {
 	ssov1.UnimplementedAuthServer
 	auth Auth
-	ping Ping
 }
 
-func Register(gRPC *grpc.Server, auth Auth, ping Ping) {
-	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth, ping: ping})
+func Register(gRPC *grpc.Server, auth Auth) {
+	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
 }
 
 const (
@@ -106,21 +99,6 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ss
 
 	return &ssov1.IsAdminResponse{
 		IsAdmin: isAdmin,
-	}, nil
-}
-
-func (s *serverAPI) Ping(ctx context.Context, req *ssov1.IsPingRequest) (*ssov1.IsPingResponse, error) {
-	ping, err := s.ping.Ping(ctx, req.GetAppId())
-	if err != nil {
-		if errors.Is(err, storage.ErrAppNotFound) {
-			return &ssov1.IsPingResponse{
-				Client: ping,
-			}, nil
-		}
-		return nil, status.Error(codes.Internal, "internal error")
-	}
-	return &ssov1.IsPingResponse{
-		Client: ping,
 	}, nil
 }
 

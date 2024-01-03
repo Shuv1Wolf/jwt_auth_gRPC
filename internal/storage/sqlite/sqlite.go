@@ -91,7 +91,7 @@ func (s *Storage) SaveApp(ctx context.Context, id int64, name string, secret str
 	if err != nil {
 		var sqliteErr sqlite3.Error
 		if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return 0, fmt.Errorf("%s: %w", op, storage.ErrUserExists)
+			return 0, fmt.Errorf("%s: %w", op, storage.ErrAppExists)
 		}
 
 		return 0, fmt.Errorf("%s: %w", op, err)
